@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import json, sys, os, time, datetime
 import http.client, urllib.request, urllib.parse, urllib.error, base64
-import datetime
+import datetime,requests
 
 #print(my_date.isoformat())
 
@@ -13,10 +13,75 @@ def initAchillesModes():
     ]
 
 # Return IDs of Spartan Medals that count towards Achilles
-def initSpartanMedals():
-    return [
-        ""
-    ]
+def initSpartanMapping(mode):
+    if 'warzone' in mode:
+        return {
+                'bfa2d856-dd46-4f26-827c-60564bd5d8cd':['858c8372-7879-4ee1-ba81-3213f1e9da0f'], # Sorry Mate 
+                #'902bd019-b9d2-4848-a6a3-9b2cea498bf0':['2201ac15-59fd-433f-94e5-b461e162799a'], # Forgot to pay the toll
+                '96179e21-1374-48a7-bfd3-e66759c69278':['216ed14e-e005-42b4-b445-a1385c796a50'], # From the top rope
+                #'e9f58e96-301b-4d58-9621-36fcea05a6a2':['2201ac15-59fd-433f-94e5-b461e162799a'], # Standard Issue
+                '02bf07b9-2041-48a4-802d-818955b8df21':['ab7c2b82-1c4b-4ba8-accf-0dfc5cf2ff77'], # The Pain Train
+                'd7205f89-37b3-47fe-a1a6-6fe487fe50b3':['ad36d0cd-7e44-49a2-8a2c-c103a38f17d8'], # I'm Just Perfect
+                #'f95a9909-53b2-4b08-8c12-88ac7e20c7d2':[''] # Road Trip,
+                '9a778521-c93d-4d43-89a7-7d23d86eaabd':['a7b68c66-7195-401d-9f82-df4da96b66c3','79b6e993-ff9b-4a53-9789-cccaf86a4e22','5f0fb4c9-19e6-44bf-a751-f254a5de8adc'] # Look ma no pin
+        }
+    else:
+        return {
+                #'bfa2d856-dd46-4f26-827c-60564bd5d8cd':['2201ac15-59fd-433f-94e5-b461e162799a'], # Sorry Mate
+                #'902bd019-b9d2-4848-a6a3-9b2cea498bf0':['2201ac15-59fd-433f-94e5-b461e162799a'], # Forgot to pay the toll
+                '96179e21-1374-48a7-bfd3-e66759c69278':['216ed14e-e005-42b4-b445-a1385c796a50'], # From the top rope
+                #'e9f58e96-301b-4d58-9621-36fcea05a6a2':['2201ac15-59fd-433f-94e5-b461e162799a'], # Standard Issue
+                '02bf07b9-2041-48a4-802d-818955b8df21':['ab7c2b82-1c4b-4ba8-accf-0dfc5cf2ff77'], # The Pain Train
+                'd7205f89-37b3-47fe-a1a6-6fe487fe50b3':['ad36d0cd-7e44-49a2-8a2c-c103a38f17d8'], # I'm Just Perfect
+                #'f95a9909-53b2-4b08-8c12-88ac7e20c7d2':[''] # Road Trip,
+                '9a778521-c93d-4d43-89a7-7d23d86eaabd':['a7b68c66-7195-401d-9f82-df4da96b66c3','79b6e993-ff9b-4a53-9789-cccaf86a4e22','5f0fb4c9-19e6-44bf-a751-f254a5de8adc'] # Look ma no pin
+                }
+
+# Get commendations from single game
+def getGameComms(game,gamertag,headers):
+    try:
+        response = requests.get("https://www.haloapi.com/stats/{0}".format(game['Links']['StatsMatchDetails']['Path']),headers=headers)
+        json_response = response.json()
+    
+        for player in json_response['PlayerStats']:
+            if player['Player']['Gamertag'] == gamertag:
+                return player
+    except Exception as e:
+        time.sleep(10)
+        return getGameComms(game,gamertag,headers)
+
+# Get commendations from all spartans for all games
+def getSpartanComms(game_dict,company_commendations,conn,headers):
+    inProgressComms = []
+    # Find in progress commendations
+    for commendation in company_commendations:
+        if not company_commendations[commendation]['completed']:
+            inProgressComms.append(company_commendations[commendation])
+
+    earned_comms = {}
+    total_comms = {}
+    # Find earned commendations 
+    for player in game_dict:
+        playerProg = {}
+        for game in game_dict[player]['Relevant_Games']:
+            game_stats = getGameComms(game,player,headers)
+            for comm_delta in game_stats['ProgressiveCommendationDeltas']:
+                earned_comms[comm_delta['Id']] = int(comm_delta['Progress']) - int(comm_delta['PreviousProgress'])
+
+            # Compare earned commendations to in progress commendations
+            comm_mapping = initSpartanMapping(game['Links']['StatsMatchDetails']['Path'])
+            for i in inProgressComms:
+                cid = i['commendation_id']
+                if cid in comm_mapping.keys():
+                    for a in comm_mapping[cid]:
+                        if a in earned_comms.keys():
+                            if i['name'] in playerProg.keys():
+                                playerProg[i['name']] = playerProg[i['name']] + earned_comms[a]
+                            else:
+                                playerProg[i['name']] = earned_comms[a]
+        total_comms[player] = playerProg
+    return total_comms
+
 
 # Get Length of Time Members Have Been Part of Company
 def getMemberLength(members,output_dir):
@@ -27,7 +92,6 @@ def getMemberLength(members,output_dir):
 
     with open(output_file,"w") as f:
         json.dump(new_dict,f,indent=4,sort_keys=True)
-
 
     return new_dict
 
@@ -63,17 +127,18 @@ def getMemberGames(members,output_dir,conn,headers,time_delta=1):
     start_delta = datetime.timedelta(weeks=time_delta)
     start_of_week = today - start_delta
     member_dict = {}
-    for member in members[:1]:
-        # If member joined within start time
-        if datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],"%Y-%m-%d").date() > start_of_week:
-            start_of_week =  datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],'%Y-%m-%d').date()
-        # Retrieve player games
-        try: 
-            relevant_games = getRelevantGames(member,conn,headers,start_of_week)
-            member_dict[member['Player']['Gamertag']] = {'Relevant_Games': relevant_games}
-            member_dict[member['Player']['Gamertag']]['Number_Relevant_Games'] = len(relevant_games)
-        except Exception as e:
-            print("Error retrieving game history")
+    for member in members:
+        if member['Player']['Gamertag'] == 'RICHARD4K117':
+            # If member joined within start time
+            if datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],"%Y-%m-%d").date() > start_of_week:
+                start_of_week =  datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],'%Y-%m-%d').date()
+            # Retrieve player games
+            try: 
+                relevant_games = getRelevantGames(member,conn,headers,start_of_week)
+                member_dict[member['Player']['Gamertag']] = {'Relevant_Games': relevant_games}
+                member_dict[member['Player']['Gamertag']]['Number_Relevant_Games'] = len(relevant_games)
+            except Exception as e:
+                print("Error retrieving game history")
     return member_dict
 
 # Get Company from Gamertag
@@ -173,7 +238,9 @@ def displayHelmetProg(company_commendations,meta_commendations):
     for level in level_mapping:
         if not level_mapping[level]['completed']:
             l = level_mapping[level]
-            print("{0} - {1} / {2}".format(l['name'], comm_mapping[l['commendation_id']]['progress'], l['threshold']))
+            l['progress'] = comm_mapping[l['commendation_id']]['progress']
+            print("{0} - {1} / {2}".format(l['name'], l['progress'], l['threshold']))
+    return level_mapping
 
 # Main Function
 def main():
@@ -209,8 +276,9 @@ def main():
         #if armor_prog < 100:
         #    displayArmorProg(company_commendation,company_commendation_metadata)
         print("Progress to Achilles Helmet: {:.2f}%".format(helmet_prog))
+        progress = ""
         if helmet_prog < 100:
-            displayHelmetProg(company_commendation,company_commendation_metadata)
+            progress = displayHelmetProg(company_commendation,company_commendation_metadata)
 
         print("Calculating Individual Contributions...")
         # Create output directory
@@ -227,6 +295,10 @@ def main():
         for member in games_dict:
             members_dict[member].update(games_dict[member])
         # Get Medals of Matches 
+        commendation_dict = getSpartanComms(games_dict,progress,conn,header)
+        for member in commendation_dict:
+            members_dict[member].update(commendation_dict[member])
+        print(commendation_dict)
         # TODO
 
         for member in members_dict:
