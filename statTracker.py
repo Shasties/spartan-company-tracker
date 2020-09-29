@@ -12,29 +12,54 @@ def initAchillesModes():
         "warzone"
     ]
 
-# Return IDs of Spartan Medals that count towards Achilles
+# Returns mapping of which company commendation ID is incremented by set of spartan commendation IDs
 def initSpartanMapping(mode):
     if 'warzone' in mode:
         return {
                 'bfa2d856-dd46-4f26-827c-60564bd5d8cd':['858c8372-7879-4ee1-ba81-3213f1e9da0f'], # Sorry Mate 
-                #'902bd019-b9d2-4848-a6a3-9b2cea498bf0':['2201ac15-59fd-433f-94e5-b461e162799a'], # Forgot to pay the toll
+                '902bd019-b9d2-4848-a6a3-9b2cea498bf0':['4204396686'], # Forgot to pay the toll
                 '96179e21-1374-48a7-bfd3-e66759c69278':['216ed14e-e005-42b4-b445-a1385c796a50'], # From the top rope
-                #'e9f58e96-301b-4d58-9621-36fcea05a6a2':['2201ac15-59fd-433f-94e5-b461e162799a'], # Standard Issue
+                'e9f58e96-301b-4d58-9621-36fcea05a6a2':[ # Standard Issue
+                    '61217e0a-832e-487b-9f3b-51b36a6803c7', # Assault Rifle
+                    '6d0d92dc-59a8-430c-9cd1-9e024e35a514', # Battle Rifle
+                    'c9bcb904-607f-42ea-acae-4cbdcdf65143', # DMR
+                    'f33f1aec-59ad-47eb-be13-fd0e654a53aa', # Pistol
+                    '3c357b49-4860-48b7-9d92-dfdfd9931b49', # SMG
+                    # No H2 BR?
+                    ],
                 '02bf07b9-2041-48a4-802d-818955b8df21':['ab7c2b82-1c4b-4ba8-accf-0dfc5cf2ff77'], # The Pain Train
                 'd7205f89-37b3-47fe-a1a6-6fe487fe50b3':['ad36d0cd-7e44-49a2-8a2c-c103a38f17d8'], # I'm Just Perfect
-                #'f95a9909-53b2-4b08-8c12-88ac7e20c7d2':[''] # Road Trip,
-                '9a778521-c93d-4d43-89a7-7d23d86eaabd':['a7b68c66-7195-401d-9f82-df4da96b66c3','79b6e993-ff9b-4a53-9789-cccaf86a4e22','5f0fb4c9-19e6-44bf-a751-f254a5de8adc'] # Look ma no pin
+                'f95a9909-53b2-4b08-8c12-88ac7e20c7d2':[# Road Trip
+                    'd3e8e2da-8e7c-4655-b238-d57db7bc9836', # Warthog
+                    # Mongoose ?
+                    'c41eb798-ca34-4ff4-95a1-9a67f2a2ccd3', # Scorpion
+                    '16dbe561-7201-4c76-9d71-e6c27945e554', # Ghost
+                    '71e867d7-51dc-484a-936e-33c8efb5a219', # Wraith
+                    ], 
+                '9a778521-c93d-4d43-89a7-7d23d86eaabd':[ # Look ma no pin
+                    'a7b68c66-7195-401d-9f82-df4da96b66c3', # Splinter Grenade
+                    '79b6e993-ff9b-4a53-9789-cccaf86a4e22', # Frag Grenade
+                    '5f0fb4c9-19e6-44bf-a751-f254a5de8adc' # Plasma Grenade
+                    ]
         }
     else:
         return {
-                #'bfa2d856-dd46-4f26-827c-60564bd5d8cd':['2201ac15-59fd-433f-94e5-b461e162799a'], # Sorry Mate
-                #'902bd019-b9d2-4848-a6a3-9b2cea498bf0':['2201ac15-59fd-433f-94e5-b461e162799a'], # Forgot to pay the toll
                 '96179e21-1374-48a7-bfd3-e66759c69278':['216ed14e-e005-42b4-b445-a1385c796a50'], # From the top rope
-                #'e9f58e96-301b-4d58-9621-36fcea05a6a2':['2201ac15-59fd-433f-94e5-b461e162799a'], # Standard Issue
+                'e9f58e96-301b-4d58-9621-36fcea05a6a2':[ # Standard Issue
+                    '61217e0a-832e-487b-9f3b-51b36a6803c7', # Assault Rifle
+                    '6d0d92dc-59a8-430c-9cd1-9e024e35a514', # Battle Rifle
+                    'c9bcb904-607f-42ea-acae-4cbdcdf65143', # DMR
+                    'f33f1aec-59ad-47eb-be13-fd0e654a53aa', # Pistol
+                    '3c357b49-4860-48b7-9d92-dfdfd9931b49', # SMG
+                    # No H2 BR?
+                    ],
                 '02bf07b9-2041-48a4-802d-818955b8df21':['ab7c2b82-1c4b-4ba8-accf-0dfc5cf2ff77'], # The Pain Train
                 'd7205f89-37b3-47fe-a1a6-6fe487fe50b3':['ad36d0cd-7e44-49a2-8a2c-c103a38f17d8'], # I'm Just Perfect
-                #'f95a9909-53b2-4b08-8c12-88ac7e20c7d2':[''] # Road Trip,
-                '9a778521-c93d-4d43-89a7-7d23d86eaabd':['a7b68c66-7195-401d-9f82-df4da96b66c3','79b6e993-ff9b-4a53-9789-cccaf86a4e22','5f0fb4c9-19e6-44bf-a751-f254a5de8adc'] # Look ma no pin
+                '9a778521-c93d-4d43-89a7-7d23d86eaabd':[ # Look ma no pin
+                    'a7b68c66-7195-401d-9f82-df4da96b66c3', # Splinter Grenade
+                    '79b6e993-ff9b-4a53-9789-cccaf86a4e22', # Frag Grenade
+                    '5f0fb4c9-19e6-44bf-a751-f254a5de8adc' # Plasma Grenade
+                    ]
                 }
 
 # Get commendations from single game
