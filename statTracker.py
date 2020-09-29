@@ -72,6 +72,7 @@ def getGameComms(game,gamertag,headers):
             if player['Player']['Gamertag'] == gamertag:
                 return player
     except Exception as e:
+        print("Api rate limit reached - pausing for 10s")
         time.sleep(10)
         return getGameComms(game,gamertag,headers)
 
@@ -133,6 +134,10 @@ def getRelevantGames(member,conn,headers,start_date,total_games=[],increment=0):
     response = conn.getresponse()
     string = response.read().decode('utf-8')
     json_obj = json.loads(string)
+    if 'statusCode' in json_obj.keys():
+        print("api rate limit reached - stopping at increment {0}".format(increment))
+        time.sleep(10)
+        return getRelevantGames(member,conn,headers,start_date,total_games=total_games,increment=increment)
     relevant_matches = []
     for match in json_obj['Results']:
         if datetime.datetime.strptime(match["MatchCompletedDate"]["ISO8601Date"].split('T')[0],"%Y-%m-%d").date() >= start_date:
@@ -154,6 +159,7 @@ def getMemberGames(members,output_dir,conn,headers,time_delta=1,filter_list=[]):
     member_dict = {}
     for member in members:
         if (filter_list == []) or (member['Player']['Gamertag'] in filter_list):
+            print("Getting stats for {0}".format(member['Player']['Gamertag']))
             # If member joined within start time
             if datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],"%Y-%m-%d").date() > start_of_week:
                 start_of_week =  datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],'%Y-%m-%d').date()
@@ -163,7 +169,7 @@ def getMemberGames(members,output_dir,conn,headers,time_delta=1,filter_list=[]):
                 member_dict[member['Player']['Gamertag']] = {'Relevant_Games': relevant_games}
                 member_dict[member['Player']['Gamertag']]['Number_Relevant_Games'] = len(relevant_games)
             except Exception as e:
-                print("Error retrieving game history")
+                print(e)
     return member_dict
 
 # Get Company from Gamertag
