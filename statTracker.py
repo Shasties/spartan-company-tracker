@@ -1,11 +1,15 @@
 #!/usr/bin/python3
-import json, sys, os
+import json, sys, os, time, datetime
 import http.client, urllib.request, urllib.parse, urllib.error, base64
+import datetime
+
+#print(my_date.isoformat())
 
 # Return IDs of Game Modes that contribute towards Achilles
 def initAchillesModes():
     return [
-        ""
+        "arena",
+        "warzone"
     ]
 
 # Return IDs of Spartan Medals that count towards Achilles
@@ -13,6 +17,64 @@ def initSpartanMedals():
     return [
         ""
     ]
+
+# Get Length of Time Members Have Been Part of Company
+def getMemberLength(members,output_dir):
+    output_file = output_dir+"/joined_dates.json"
+    new_dict = {}
+    for member in members:
+        new_dict[member['Player']['Gamertag']] = {'Joined': member['JoinedDate']['ISO8601Date'].split("T")[0]}
+
+    with open(output_file,"w") as f:
+        json.dump(new_dict,f,indent=4,sort_keys=True)
+
+
+    return new_dict
+
+# Recursive Function for formatting + making calls for specific player
+def getRelevantGames(member,conn,headers,start_date,total_games=[],increment=0):
+    params = urllib.parse.urlencode({
+    # Request parameters
+    'modes': ','.join(initAchillesModes()),
+    'start': increment,
+    'include-times': True,
+    })
+    gamertag = member['Player']['Gamertag'].replace(" ","%20")
+    conn.request("GET", "/stats/h5/players/{0}/matches?{1}".format(gamertag,params), "{body}", headers)
+    response = conn.getresponse()
+    string = response.read().decode('utf-8')
+    json_obj = json.loads(string)
+    relevant_matches = []
+    for match in json_obj['Results']:
+        if datetime.datetime.strptime(match["MatchCompletedDate"]["ISO8601Date"].split('T')[0],"%Y-%m-%d").date() >= start_date:
+            relevant_matches.append(match)
+    total_games = total_games + relevant_matches
+    # Can only grab 25 matches per call
+    if len(relevant_matches) == 25 :
+        return getRelevantGames(member,conn,headers,start_date,total_games,increment=increment+25)
+    else:
+        return total_games
+
+# Get Number of Achilles Game Modes played in Last X Time - Defaults to 1 week
+def getMemberGames(members,output_dir,conn,headers,time_delta=1):
+    output_file = output_dir+"/played_matches.json"
+    today = datetime.date.today()
+    weekday = today.weekday()
+    start_delta = datetime.timedelta(weeks=time_delta)
+    start_of_week = today - start_delta
+    member_dict = {}
+    for member in members[:1]:
+        # If member joined within start time
+        if datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],"%Y-%m-%d").date() > start_of_week:
+            start_of_week =  datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],'%Y-%m-%d').date()
+        # Retrieve player games
+        try: 
+            relevant_games = getRelevantGames(member,conn,headers,start_of_week)
+            member_dict[member['Player']['Gamertag']] = {'Relevant_Games': relevant_games}
+            member_dict[member['Player']['Gamertag']]['Number_Relevant_Games'] = len(relevant_games)
+        except Exception as e:
+            print("Error retrieving game history")
+    return member_dict
 
 # Get Company from Gamertag
 def getCompany(conn,headers,player):
@@ -143,19 +205,36 @@ def main():
 
         # Achilles Completion
         print("Achilles Armor Completion: {:.2f}%".format(armor_prog))
-        if armor_prog < 100:
-            displayArmorProg(company_commendation,company_commendation_metadata)
+        #TODO
+        #if armor_prog < 100:
+        #    displayArmorProg(company_commendation,company_commendation_metadata)
         print("Progress to Achilles Helmet: {:.2f}%".format(helmet_prog))
         if helmet_prog < 100:
             displayHelmetProg(company_commendation,company_commendation_metadata)
 
-        ## TODO - Handle Member contributions ##
         print("Calculating Individual Contributions...")
+        # Create output directory
         try:
             os.mkdir(output_dir)
         except Exception as e:
             pass
+
+        # Length of Time
+        members_dict = getMemberLength(company_info['Members'],output_dir)
+        # Get Matches within past X time
+        games_dict = getMemberGames(company_info['Members'],output_dir,conn,header)
+        # Merge to larger data structure
+        for member in games_dict:
+            members_dict[member].update(games_dict[member])
+        # Get Medals of Matches 
         # TODO
+
+        for member in members_dict:
+            members_dict[member].pop('Relevant_Games',None)
+
+        with open(output_dir+"/overall.json","w") as f:
+            json.dump(members_dict,f,indent=4,sort_keys=True)
+
         print("See output under: {0}".format(output_dir))
 
     except Exception as e:
