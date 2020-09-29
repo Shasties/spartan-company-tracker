@@ -84,13 +84,13 @@ def getSpartanComms(game_dict,company_commendations,conn,headers):
         if not company_commendations[commendation]['completed']:
             inProgressComms.append(company_commendations[commendation])
 
-    earned_comms = {}
     total_comms = {}
     # Find earned commendations 
     for player in game_dict:
         playerProg = {}
         for game in game_dict[player]['Relevant_Games']:
             game_stats = getGameComms(game,player,headers)
+            earned_comms = {}
             for comm_delta in game_stats['ProgressiveCommendationDeltas']:
                 earned_comms[comm_delta['Id']] = int(comm_delta['Progress']) - int(comm_delta['PreviousProgress'])
 
@@ -140,7 +140,8 @@ def getRelevantGames(member,conn,headers,start_date,total_games=[],increment=0):
         return getRelevantGames(member,conn,headers,start_date,total_games=total_games,increment=increment)
     relevant_matches = []
     for match in json_obj['Results']:
-        if datetime.datetime.strptime(match["MatchCompletedDate"]["ISO8601Date"].split('T')[0],"%Y-%m-%d").date() >= start_date:
+        # Subtract one day due to time API takes to register match as being completed
+        if (datetime.datetime.strptime(match["MatchCompletedDate"]["ISO8601Date"].split('T')[0],"%Y-%m-%d")-datetime.timedelta(days=1)).date() >= start_date:
             relevant_matches.append(match)
     total_games = total_games + relevant_matches
     # Can only grab 25 matches per call
@@ -155,10 +156,10 @@ def getMemberGames(members,output_dir,conn,headers,time_delta=1,filter_list=[]):
     today = datetime.date.today()
     weekday = today.weekday()
     start_delta = datetime.timedelta(weeks=time_delta)
-    start_of_week = today - start_delta
     member_dict = {}
     for member in members:
         if (filter_list == []) or (member['Player']['Gamertag'] in filter_list):
+            start_of_week = today - start_delta
             print("Getting stats for {0}".format(member['Player']['Gamertag']))
             # If member joined within start time
             if datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],"%Y-%m-%d").date() > start_of_week:
