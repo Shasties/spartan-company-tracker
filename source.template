@@ -1,0 +1,7 @@
+{
+"api_key": "api_key",
+"player_of_company": "some_gamertag",
+"filter_players": [] # No Filter
+"filter_players": ["player_one"] # Filter on one player
+"filter_players": ["player_one","player_two"] # Filter on multiple players
+}

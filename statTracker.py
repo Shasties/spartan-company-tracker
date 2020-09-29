@@ -120,7 +120,7 @@ def getRelevantGames(member,conn,headers,start_date,total_games=[],increment=0):
         return total_games
 
 # Get Number of Achilles Game Modes played in Last X Time - Defaults to 1 week
-def getMemberGames(members,output_dir,conn,headers,time_delta=1):
+def getMemberGames(members,output_dir,conn,headers,time_delta=1,filter_list=[]):
     output_file = output_dir+"/played_matches.json"
     today = datetime.date.today()
     weekday = today.weekday()
@@ -128,7 +128,7 @@ def getMemberGames(members,output_dir,conn,headers,time_delta=1):
     start_of_week = today - start_delta
     member_dict = {}
     for member in members:
-        if member['Player']['Gamertag'] == 'RICHARD4K117':
+        if (filter_list == []) or (member['Player']['Gamertag'] in filter_list):
             # If member joined within start time
             if datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],"%Y-%m-%d").date() > start_of_week:
                 start_of_week =  datetime.datetime.strptime(member['JoinedDate']['ISO8601Date'].split('T')[0],'%Y-%m-%d').date()
@@ -252,7 +252,6 @@ def main():
     except Exception as e:
         print("cannot connect to haloapi.com")
         print(e)
-
     # Perform Data Gathering
     try:
         # Overview
@@ -260,7 +259,7 @@ def main():
         company_commendation_metadata = readMetadata()
         output_dir = "./output"
         header = {'Ocp-Apim-Subscription-Key':data['api_key']}
-        company = getCompany(conn,header,"CrankiestSeeker")
+        company = getCompany(conn,header,data['player_of_company'])
         print("Gathering data for Spartan Company: %s" % company['Name'])
         company_info = getCompanyInfo(conn,header,company['Id'])
         company_commendation = getCompanyComm(conn,header,company['Id'])
@@ -287,23 +286,22 @@ def main():
         except Exception as e:
             pass
 
-        # Length of Time
+        # Length of Time Players have been Members
         members_dict = getMemberLength(company_info['Members'],output_dir)
         # Get Matches within past X time
-        games_dict = getMemberGames(company_info['Members'],output_dir,conn,header)
-        # Merge to larger data structure
+        games_dict = getMemberGames(company_info['Members'],output_dir,conn,header,filter_list=data['filter_players'])
         for member in games_dict:
             members_dict[member].update(games_dict[member])
         # Get Medals of Matches 
         commendation_dict = getSpartanComms(games_dict,progress,conn,header)
         for member in commendation_dict:
             members_dict[member].update(commendation_dict[member])
-        print(commendation_dict)
-        # TODO
 
+        # Cleanup data structure
         for member in members_dict:
             members_dict[member].pop('Relevant_Games',None)
 
+        # Write to output
         with open(output_dir+"/overall.json","w") as f:
             json.dump(members_dict,f,indent=4,sort_keys=True)
 
