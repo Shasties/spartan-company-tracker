@@ -99,7 +99,9 @@ def getSpartanComms(game_dict,company_commendations,conn,headers):
             for i in inProgressComms:
                 cid = i['commendation_id']
                 if cid in comm_mapping.keys():
+                    # for all player commendations that count towards company commendation
                     for a in comm_mapping[cid]:
+                        # if player has earned commendation, add to playerProg dictionary
                         if a in earned_comms.keys():
                             if i['name'] in playerProg.keys():
                                 playerProg[i['name']] = playerProg[i['name']] + earned_comms[a]
@@ -141,7 +143,8 @@ def getRelevantGames(member,conn,headers,start_date,total_games=[],increment=0):
     relevant_matches = []
     for match in json_obj['Results']:
         # Subtract one day due to time API takes to register match as being completed
-        if (datetime.datetime.strptime(match["MatchCompletedDate"]["ISO8601Date"].split('T')[0],"%Y-%m-%d")-datetime.timedelta(days=1)).date() >= start_date:
+        #if (datetime.datetime.strptime(match["MatchCompletedDate"]["ISO8601Date"].split('T')[0],"%Y-%m-%d")-datetime.timedelta(days=1)).date() >= start_date:
+        if datetime.datetime.strptime(match["MatchCompletedDate"]["ISO8601Date"].split('T')[0],"%Y-%m-%d").date() >= start_date:
             relevant_matches.append(match)
     total_games = total_games + relevant_matches
     # Can only grab 25 matches per call
