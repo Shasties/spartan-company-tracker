@@ -18,7 +18,7 @@ def initSpartanMapping(mode):
     if 'warzone' in mode:
         return {
                 'comm_tracker': {#Company commendations that can be tracked w/ Spartan commendations
-                   'bfa2d856-dd46-4f26-827c-60564bd5d8cd':['858c8372-7879-4ee1-ba81-3213f1e9da0f'], # Sorry Mate 
+                    'bfa2d856-dd46-4f26-827c-60564bd5d8cd':['858c8372-7879-4ee1-ba81-3213f1e9da0f'], # Sorry Mate 
                     '96179e21-1374-48a7-bfd3-e66759c69278':['216ed14e-e005-42b4-b445-a1385c796a50'], # From the top rope
                     'e9f58e96-301b-4d58-9621-36fcea05a6a2':[ # Standard Issue
                         '61217e0a-832e-487b-9f3b-51b36a6803c7', # Assault Rifle
