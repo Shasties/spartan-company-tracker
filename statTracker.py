@@ -59,6 +59,13 @@ def initSpartanMapping(mode):
                         '3c357b49-4860-48b7-9d92-dfdfd9931b49', # SMG
                         # No H2 BR?
                         ],
+                    'f95a9909-53b2-4b08-8c12-88ac7e20c7d2':[# Road Trip
+                        'd3e8e2da-8e7c-4655-b238-d57db7bc9836', # Warthog
+                        # Mongoose ?
+                        'c41eb798-ca34-4ff4-95a1-9a67f2a2ccd3', # Scorpion
+                        '16dbe561-7201-4c76-9d71-e6c27945e554', # Ghost
+                        '71e867d7-51dc-484a-936e-33c8efb5a219', # Wraith
+                        ],
                     '02bf07b9-2041-48a4-802d-818955b8df21':['ab7c2b82-1c4b-4ba8-accf-0dfc5cf2ff77'], # The Pain Train
                     'd7205f89-37b3-47fe-a1a6-6fe487fe50b3':['ad36d0cd-7e44-49a2-8a2c-c103a38f17d8'], # I'm Just Perfect
                     '9a778521-c93d-4d43-89a7-7d23d86eaabd':[ # Look ma no pin
@@ -68,7 +75,7 @@ def initSpartanMapping(mode):
                         ]
                     },
                 'medal_tracker': { # Company commendations that can be tracked w/ Spartan medals
-                    '902bd019-b9d2-4848-a6a3-9b2cea498bf0':['4204396686'], # Forgot to pay the toll
+                    '902bd019-b9d2-4848-a6a3-9b2cea498bf0':[4204396686], # Forgot to pay the toll
                     }
         }
 
